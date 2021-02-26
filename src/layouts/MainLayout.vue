@@ -1,24 +1,22 @@
 <template>
   <div class="WAL position-relative bg-grey-4" :style="style">
-    <q-layout view="hHr lpR fFr" class="WAL__layout shadow-3" container>
+    <q-layout view="hHh lpR fFr" class="WAL__layout shadow-3" container>
       <q-header elevated>
 
-        <q-toolbar class="bg-grey-3 text-black">
-          <q-btn
-            round
-            flat
-            icon="keyboard_arrow_left"
-            class="WAL__drawer-open q-mr-sm"
-            @click="leftDrawerOpen = true"
-          />
-
-          <q-btn round dense flat icon="subway" color="grey-8" size="16px"/>
-
-          <q-toolbar-title>武汉地铁</q-toolbar-title>
+        <q-bar class="q-electron-drag text-black bg-grey-3">
+          <q-icon name="subway"/>
+          <div>武汉地铁</div>
 
           <q-space/>
 
-          <q-btn round flat icon="more_vert">
+          <q-btn dense flat icon="minimize" @click="minimize"/>
+          <q-btn dense flat icon="crop_square" @click="maximize"/>
+          <q-btn dense flat icon="close" @click="closeApp"/>
+        </q-bar>
+
+        <q-toolbar class="bg-grey-3 text-black">
+
+          <q-btn dense round flat icon="more_vert">
             <q-menu auto-close :offset="[110, 0]">
               <q-list style="min-width: 150px">
                 <q-item clickable>
@@ -76,39 +74,28 @@
 
         <!--   list    -->
         <q-scroll-area style="height: calc(100% - 100px)">
-          <!--          <q-list>-->
-          <!--            <q-item-->
-          <!--              v-for="(conversation, index) in conversations"-->
-          <!--              :key="conversation.id"-->
-          <!--              clickable-->
-          <!--              v-ripple-->
-          <!--              @click="currentConversationIndex = index"-->
-          <!--            >-->
-          <!--              <q-item-section avatar>-->
-          <!--                <q-avatar>-->
-          <!--                  <img :src="conversation.avatar">-->
-          <!--                </q-avatar>-->
-          <!--              </q-item-section>-->
+          <q-list>
+            <q-expansion-item icon="mail" label="Inbox" caption="5 unread emails"
+                              header-class="q-my-sm q-mx-md shadow-2 text-white"
+                              :header-style="{ background: station.color, borderRadius: '5px' }"
+                              v-for="station in stations"
+                              :key="station.id"
+                              clickable
+                              group="station"
+                              @click="showLine(station.id)"
+            >
+              <template v-slot:header>
+                <q-item-section>
+                  <div class="text-h6">{{ station.name }}</div>
+                  <div class="text-subtitle2">{{ station.detail }}</div>
+                </q-item-section>
+              </template>
 
-          <!--              <q-item-section>-->
-          <!--                <q-item-label lines="1">-->
-          <!--                  {{ conversation.person }}-->
-          <!--                </q-item-label>-->
-          <!--                <q-item-label class="conversation__summary" caption>-->
-          <!--                  <q-icon name="check" v-if="conversation.sent"/>-->
-          <!--                  <q-icon name="not_interested" v-if="conversation.deleted"/>-->
-          <!--                  {{ conversation.caption }}-->
-          <!--                </q-item-label>-->
-          <!--              </q-item-section>-->
-
-          <!--              <q-item-section side>-->
-          <!--                <q-item-label caption>-->
-          <!--                  {{ conversation.time }}-->
-          <!--                </q-item-label>-->
-          <!--                <q-icon name="keyboard_arrow_down"/>-->
-          <!--              </q-item-section>-->
-          <!--            </q-item>-->
-          <!--          </q-list>-->
+              <q-card class="q-mx-md">
+                {{ station.detail }}
+              </q-card>
+            </q-expansion-item>
+          </q-list>
         </q-scroll-area>
       </q-drawer>
 
@@ -122,45 +109,55 @@
 
 <script>
 export default {
-  name: 'WhatsappLayout',
+  name: 'SubwayLayout',
   data () {
     return {
       rightDrawerOpen: false,
       search: '',
       message: '',
       currentConversationIndex: 0,
-      conversations: [
+      stations: [
         {
           id: 1,
-          person: 'Razvan Stoenescu',
-          avatar: 'https://cdn.quasar.dev/team/razvan_stoenescu.jpeg',
-          caption: 'I\'m working on Quasar!',
-          time: '15:00',
-          sent: true
+          name: '地铁1号线',
+          detail: '径河-汉口北',
+          color: '#3d84c6'
         },
         {
           id: 2,
-          person: 'Dan Popescu',
-          avatar: 'https://cdn.quasar.dev/team/dan_popescu.jpg',
-          caption: 'I\'m working on Quasar!',
-          time: '16:00',
-          sent: true
+          name: '地铁2号线',
+          detail: '佛祖岭-天河机场',
+          color: '#eb7caf'
         },
         {
           id: 3,
-          person: 'Jeff Galbraith',
-          avatar: 'https://cdn.quasar.dev/team/jeff_galbraith.jpg',
-          caption: 'I\'m working on Quasar!',
-          time: '18:00',
-          sent: true
+          name: '地铁3号线',
+          detail: '宏图大道-沌阳大道',
+          color: '#d9b966'
         },
         {
           id: 4,
-          person: 'Allan Gaunt',
-          avatar: 'https://cdn.quasar.dev/team/allan_gaunt.png',
-          caption: 'I\'m working on Quasar!',
-          time: '17:00',
-          sent: true
+          name: '地铁4号线',
+          detail: '柏林-武汉火车站',
+          color: '#8ec720'
+        },
+        {
+          id: 5,
+          name: '地铁6号线',
+          detail: '东风公司-金银湖公园',
+          color: '#008536'
+        },
+        {
+          id: 6,
+          name: '地铁7号线',
+          detail: '园博园北-青龙山地铁小镇',
+          color: '#eb7900'
+        },
+        {
+          id: 7,
+          name: '地铁8号线',
+          detail: '军运村-金潭路',
+          color: '#98acab'
         }
       ]
     }
@@ -174,6 +171,46 @@ export default {
         height: this.$q.screen.height + 'px'
       }
     }
+  },
+  methods: {
+    minimize () {
+      if (process.env.MODE === 'electron') {
+        this.$q.electron.remote.BrowserWindow.getFocusedWindow().minimize()
+      }
+    },
+    maximize () {
+      if (process.env.MODE === 'electron') {
+        const win = this.$q.electron.remote.BrowserWindow.getFocusedWindow()
+        console.error(win.isMaximizable())
+        if (win.isMaximized()) {
+          win.unmaximize()
+        } else {
+          win.maximize()
+        }
+      }
+    },
+    closeApp () {
+      if (process.env.MODE === 'electron') {
+        this.$q.electron.remote.BrowserWindow.getFocusedWindow().close()
+      }
+    },
+    showLine (lineId) {
+      const centerStationId = [
+        [114.32, 30.63],
+        [114.4, 30.63],
+        [114.28, 30.595],
+        [114.30, 30.575],
+        [114.28, 30.585],
+        [114.35, 30.51],
+        [114.37, 30.56]]
+      if (this.$store.state.map.lineId === lineId) {
+        this.$store.commit('map/updateCenter', null)
+        this.$store.commit('map/updateFocusLine', 0)
+        return
+      }
+      this.$store.commit('map/updateCenter', centerStationId[lineId - 1])
+      this.$store.commit('map/updateFocusLine', lineId)
+    }
   }
 }
 </script>
@@ -182,24 +219,6 @@ export default {
 .WAL
   width: 100%
   height: 100%
-  padding-top: 20px
-  padding-bottom: 20px
-
-  &:before
-    content: ''
-    height: 127px
-    position: fixed
-    top: 0
-    width: 100%
-    background-color: #009688
-
-  &__layout
-    margin: 0 auto
-    z-index: 4000
-    height: 100%
-    width: 90%
-    max-width: 1050px
-    border-radius: 5px
 
   &__field.q-field--outlined .q-field__control:before
     border: none
@@ -227,4 +246,8 @@ export default {
 .conversation__more
   margin-top: 0 !important
   font-size: 1.4rem
+
+.station-card
+  width: 100%
+  margin: 0 auto
 </style>

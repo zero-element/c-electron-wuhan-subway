@@ -1,23 +1,5 @@
 import BMap from 'BaiduMap'
 
-/**
- * 墨卡托转经纬度
- * @param poi 墨卡托
- * @returns {[]}
- * @private
- */
-export function getLngLat (poi) {
-  const mctXX = poi.x
-  const mctYY = poi.y
-  const mctXY = new BMap.Pixel(mctXX, mctYY)
-  var map = new BMap.Map('main')
-
-  const projection2 = map.getMapType().getProjection()
-  const LngLat = projection2.pointToLngLat(mctXY)
-
-  return [LngLat.lng, LngLat.lat]
-}
-
 export const mapstyle = {
   styleJson: [{
     featureType: 'water',
@@ -117,3 +99,78 @@ export const mapstyle = {
     }
   }]
 }
+
+import * as _ from 'lodash'
+
+function getLngLat (poi) {
+  const mctXX = poi.x
+  const mctYY = poi.y
+  const mctXY = new BMap.Pixel(mctXX, mctYY)
+  var map = new BMap.Map('main')
+
+  const projection2 = map.getMapType().getProjection()
+  const LngLat = projection2.pointToLngLat(mctXY)
+
+  return [LngLat.lng, LngLat.lat]
+}
+
+const stationData = require('app/public/station.json')
+
+function getLines () {
+  return stationData.content.filter((value, index) => index & 1)
+    .map(line => {
+      return {
+        coords: line.stops.map(stop => {
+          return getLngLat(stop)
+        })
+      }
+    })
+}
+
+export const GetLines = _.once(getLines)
+
+export const NORMALSTATION = 0x1, CHANGESTATION = 0x2
+
+function getStations () {
+  const allStations = _.flatMap(stationData.content.filter((value, index) => index & 1), (line, lineIndex) =>
+    line.stops.map(stop => {
+      return {
+        name: stop.name,
+        value: getLngLat(stop),
+        lineId: lineIndex + 1
+      }
+    })
+  )
+
+  const count = {}
+  const solvedStations = []
+  allStations.forEach((station) => {
+    count[station.name] = station.name in count ? count[station.name] + 1 : 1
+  })
+  allStations.forEach((station, index) => {
+    switch (count[station.name]) {
+      case 0:
+        break
+      case 1: {
+        station.flag = NORMALSTATION
+        solvedStations.push(station)
+        count[station.name] = 0
+        break
+      }
+      default : {
+        station.flag = CHANGESTATION
+        solvedStations.push(station)
+        count[station.name] = 0
+        break
+      }
+    }
+  })
+  solvedStations.map((station, index) => {
+    station.id = index + 1
+    return station
+  })
+
+  return solvedStations
+}
+
+export const GetStations = _.once(getStations)
