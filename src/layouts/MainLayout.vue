@@ -2,121 +2,220 @@
   <div class="WAL position-relative bg-grey-4" :style="style">
     <q-layout view="hHh lpR fFr" class="WAL__layout shadow-3" container>
       <q-header elevated>
-
-        <q-bar class="q-electron-drag text-black bg-grey-3">
-          <q-icon name="subway"/>
+        <q-bar class="q-electron-drag text-black bg-grey-3 q-py-md">
+          <q-icon name="subway" />
           <div>武汉地铁</div>
 
           <q-space/>
 
-          <q-btn dense flat icon="minimize" @click="minimize"/>
-          <q-btn dense flat icon="crop_square" @click="maximize"/>
-          <q-btn dense flat icon="close" @click="closeApp"/>
+          <q-btn dense flat icon="minimize" @click="minimize" />
+          <q-btn dense flat icon="crop_square" @click="maximize" />
+          <q-btn dense flat icon="close" @click="close" />
         </q-bar>
-
-        <q-toolbar class="bg-grey-3 text-black">
-
-          <q-btn dense round flat icon="more_vert">
-            <q-menu auto-close :offset="[110, 0]">
-              <q-list style="min-width: 150px">
-                <q-item clickable>
-                  <q-item-section>Contact data</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Block</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Select messages</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Silence</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Clear messages</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Erase messages</q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-          </q-btn>
-        </q-toolbar>
       </q-header>
 
-      <q-drawer
-        v-model="rightDrawerOpen"
-        side="right"
-        show-if-above
-        bordered
-        :breakpoint="690"
-      >
+      <q-drawer side="right" show-if-above bordered :breakpoint="690">
         <q-toolbar class="bg-grey-3">
-          <q-toolbar-title>路线信息</q-toolbar-title>
+          <q-btn-toggle
+            v-model="mode"
+            class="shadow-1"
+            no-caps
+            rounded
+            unelevated
+            toggle-color="primary"
+            color="white"
+            text-color="primary"
+            :options="[
+              {label: '票', value: 1},
+              {label: '时', value: 2},
+              {label: '拥', value: 3}
+            ]"
+          />
           <q-space/>
 
           <q-btn
+            icon="check"
+            style="margin-right: .5em"
+            dense
             round
-            flat
-            icon="close"
-            class="WAL__drawer-close"
-            @click="leftDrawerOpen = false"
+            color="secondary"
           />
+
+          <div>
+            <q-badge color="teal" class="q-pa-xs" floating transparent>
+              {{ time }}
+            </q-badge>
+            <q-btn
+              icon="access_time"
+              style="margin-right: .5em"
+              dense
+              round
+              color="primary"
+            >
+              <q-popup-proxy
+                @before-show="updateProxy"
+                transition-show="scale"
+                transition-hide="scale"
+              >
+                <q-time v-model="proxyTime" format24h>
+                  <div class="row items-center justify-end q-gutter-sm">
+                    <q-btn label="Cancel" color="primary" flat v-close-popup />
+                    <q-btn
+                      label="OK"
+                      color="primary"
+                      flat
+                      @click="saveProxy"
+                      v-close-popup
+                    />
+                  </div>
+                </q-time>
+              </q-popup-proxy>
+            </q-btn>
+          </div>
         </q-toolbar>
 
-        <q-toolbar class="bg-grey-2">
-          <q-input rounded outlined dense class="WAL__field full-width" bg-color="white" v-model="search"
-                   placeholder="搜索你需要寻找的站点">
-            <template slot="prepend">
-              <q-icon name="search"/>
+        <div class="bg-grey-2 q-px-sm">
+          <q-select
+            dense
+            borderless
+            v-model="initStationName"
+            use-input
+            input-debounce="0"
+            :placeholder="initPlaceHolder"
+            :options="options"
+            @filter="filterFn"
+            @input="searchStation"
+            @focus="initFocus"
+            style="width: 250px"
+            class="WAL__field full-width"
+          >
+            <template v-slot:prepend>
+              <q-icon
+                name="fiber_manual_record"
+                color="green"
+                class="text-caption"
+              />
             </template>
-          </q-input>
-        </q-toolbar>
+
+            <template v-slot:no-option>
+              <q-item>
+                <q-item-section class="text-grey">
+                  No results
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+
+          <q-separator />
+
+          <q-select
+            dense
+            borderless
+            v-model="finalStationName"
+            use-input
+            input-debounce="0"
+            :placeholder="finalPlaceHolder"
+            :options="options"
+            @filter="filterFn"
+            @input="searchStation"
+            @focus="finalFocus"
+            style="width: 250px"
+            class="WAL__field full-width"
+          >
+            <template v-slot:prepend>
+              <q-icon
+                name="fiber_manual_record"
+                color="red"
+                class="text-caption"
+              />
+            </template>
+
+            <template v-slot:no-option>
+              <q-item>
+                <q-item-section class="text-grey">
+                  No results
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+        </div>
 
         <!--   list    -->
         <q-scroll-area style="height: calc(100% - 100px)">
           <q-list>
-            <q-expansion-item icon="mail" label="Inbox" caption="5 unread emails"
-                              header-class="q-my-sm q-mx-md shadow-2 text-white"
-                              :header-style="{ background: station.color, borderRadius: '5px' }"
-                              v-for="station in stations"
-                              :key="station.id"
-                              clickable
-                              group="station"
-                              @click="showLine(station.id)"
+            <q-expansion-item
+              icon="mail"
+              label="Inbox"
+              caption="5 unread emails"
+              header-class="q-my-sm q-mx-md shadow-2 text-white"
+              :header-style="{ background: line.color, borderRadius: '5px' }"
+              v-for="(line, lineIndex) in lines"
+              :key="line.id"
+              ref="item"
+              clickable
+              group="station"
+              @hide="hideItem"
+              @show="showItem(line.id)"
             >
               <template v-slot:header>
                 <q-item-section>
-                  <div class="text-h6">{{ station.name }}</div>
-                  <div class="text-subtitle2">{{ station.detail }}</div>
+                  <div class="text-h6">{{ line.name }}</div>
+                  <div class="text-subtitle2">{{ line.detail }}</div>
                 </q-item-section>
               </template>
 
               <q-card class="q-mx-md">
-                {{ station.detail }}
+                <q-timeline :color="'line' + line.id" class="text-black">
+                  <q-timeline-entry
+                    v-for="currentStation in stations[lineIndex]"
+                    class="cursor-pointer"
+                    :key="currentStation.iStationIndex"
+                    :title="currentStation.name"
+                    @click="
+                      findStation(currentLineId, currentStation.iStationIndex)
+                    "
+                  >
+                    <template v-slot:title>
+                      <div class="cursor-pointer">
+                        {{ currentStation.name }}
+                      </div>
+                    </template>
+                  </q-timeline-entry>
+                </q-timeline>
               </q-card>
             </q-expansion-item>
           </q-list>
         </q-scroll-area>
       </q-drawer>
 
-      <q-page-container class="bg-grey-2">
-        <router-view/>
+      <q-page-container class="bg-grey-2 map">
+        <router-view />
       </q-page-container>
-
     </q-layout>
   </div>
 </template>
 
 <script>
+import { GetLineStations, GetAllStations } from 'src/libs/utils'
+import * as _ from 'lodash'
+
+const LINENUMBER = 7
+
 export default {
-  name: 'SubwayLayout',
+  name: 'subwaylayout',
   data () {
     return {
-      rightDrawerOpen: false,
-      search: '',
-      message: '',
-      currentConversationIndex: 0,
-      stations: [
+      initStationName: '',
+      mode: 1,
+      finalStationName: '',
+      options: [],
+      selectTime: false,
+      time: '9:00',
+      proxyTime: '9:00',
+      currentLineId: 0,
+      stationOptions: [],
+      allStations: [],
+      lines: [
         {
           id: 1,
           name: '地铁1号线',
@@ -159,17 +258,30 @@ export default {
           detail: '军运村-金潭路',
           color: '#98acab'
         }
-      ]
+      ],
+      stations: []
     }
   },
   computed: {
-    currentConversation () {
-      return this.conversations[this.currentConversationIndex]
-    },
     style () {
       return {
         height: this.$q.screen.height + 'px'
       }
+    },
+    initPlaceHolder () {
+      return this.$store.state.search.initStationName === null
+        ? '起始站点'
+        : ''
+    },
+    finalPlaceHolder () {
+      return this.$store.state.search.finalStationName === null
+        ? '目的站点'
+        : ''
+    }
+  },
+  watch: {
+    initStationName (newVal, oldVal) {
+      this.$store.commit('search/updateStationName', newVal)
     }
   },
   methods: {
@@ -181,7 +293,7 @@ export default {
     maximize () {
       if (process.env.MODE === 'electron') {
         const win = this.$q.electron.remote.BrowserWindow.getFocusedWindow()
-        console.error(win.isMaximizable())
+
         if (win.isMaximized()) {
           win.unmaximize()
         } else {
@@ -189,28 +301,72 @@ export default {
         }
       }
     },
-    closeApp () {
+    close () {
       if (process.env.MODE === 'electron') {
         this.$q.electron.remote.BrowserWindow.getFocusedWindow().close()
       }
     },
-    showLine (lineId) {
-      const centerStationId = [
-        [114.32, 30.63],
-        [114.4, 30.63],
-        [114.28, 30.595],
-        [114.30, 30.575],
-        [114.28, 30.585],
-        [114.35, 30.51],
-        [114.37, 30.56]]
-      if (this.$store.state.map.lineId === lineId) {
-        this.$store.commit('map/updateCenter', null)
+    findStation (lineId, stationIndex) {
+      const focusStation = this.stations[lineId - 1][stationIndex]
+      const centerStation = _(this.allStations).find({
+        name: focusStation.name
+      })
+      this.$store.commit('map/updateFocusCenter', centerStation.value) // TODO fix mutation bug
+      this.$store.commit('search/updateStationName', focusStation.name)
+    },
+    hideItem (evt) {
+      if (evt) {
         this.$store.commit('map/updateFocusLine', 0)
+      }
+    },
+    showItem (lineId) {
+      this.currentLineId = lineId
+      this.$store.commit('map/updateFocusLine', lineId)
+    },
+    filterFn (val, update, abort) {
+      if (val.length < 1) {
+        abort()
         return
       }
-      this.$store.commit('map/updateCenter', centerStationId[lineId - 1])
-      this.$store.commit('map/updateFocusLine', lineId)
+
+      update(() => {
+        this.options = this.stationOptions.filter(v => v.indexOf(val) > -1)
+      })
+    },
+    searchStation (val) {
+      const resultStation = _(this.allStations).find({ name: val })
+      if (!resultStation) return
+      if (resultStation.lineId.length === 1) {
+        // 非换乘站
+        this.$refs.item[resultStation.lineId - 1].show()
+      } else {
+        // 换乘站
+        this.$refs.item.forEach(item => item.hide())
+        this.$store.commit('map/updateFocusLine', 0)
+      }
+      this.$store.commit('map/updateFocusCenter', resultStation.value)
+    },
+    initFocus () {
+      this.$store.commit('search/updateFocusId', 1)
+    },
+    finalFocus () {
+      this.$store.commit('search/updateFocusId', 2)
+    },
+    updateProxy () {
+      this.proxyTime = this.time
+    },
+    saveProxy () {
+      this.time = this.proxyTime
     }
+  },
+  created () {
+    for (let i = 0; i < LINENUMBER; i++) {
+      this.stations.push(GetLineStations(i + 1))
+    }
+  },
+  mounted () {
+    this.allStations = GetAllStations()
+    this.stationOptions.push(...this.allStations.map(station => station.name))
   }
 }
 </script>
@@ -222,10 +378,6 @@ export default {
 
   &__field.q-field--outlined .q-field__control:before
     border: none
-
-  .q-drawer--standard
-    .WAL__drawer-close
-      display: none
 
 @media (max-width: 850px)
   .WAL
@@ -240,14 +392,28 @@ export default {
     &__drawer-open
       display: none
 
-.conversation__summary
-  margin-top: 4px
-
-.conversation__more
-  margin-top: 0 !important
-  font-size: 1.4rem
-
 .station-card
   width: 100%
   margin: 0 auto
+
+.text-line1
+  color: #3d84c6
+
+.text-line2
+  color: #eb7caf
+
+.text-line3
+  color: #d9b966
+
+.text-line4
+  color: #8ec720
+
+.text-line5
+  color: #008536
+
+.text-line6
+  color: #eb7900
+
+.text-line7
+  color: #98acab
 </style>

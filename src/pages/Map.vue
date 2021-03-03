@@ -1,6 +1,6 @@
 <template>
   <div class="echarts-map">
-    <div id="main" style="height: 100%; width: 100%"></div>
+    <div id="main" style="height:100%; width: 100%"></div>
   </div>
 </template>
 
@@ -9,8 +9,7 @@ import 'echarts/extension/bmap/bmap'
 import * as echarts from 'echarts'
 import * as utils from 'src/libs/utils'
 import * as _ from 'lodash'
-
-const ipcRenderer = require('electron').ipcRenderer
+import { ipcRenderer } from 'electron'
 
 export default {
   name: 'Echarts',
@@ -24,11 +23,11 @@ export default {
     drawMap (lineId) {
       const color = ['#3d84c6', '#eb7caf', '#d9b966', '#8ec720', '#008536', '#eb7900', '#98acab', '#f2cf01']
       const lines = utils.GetLines()
-      console.log(lineId)
-      console.log(lines)
-      const stations = _(utils.GetStations()).filter((station) => lineId ? station.lineId === lineId : true)
-      const nStations = _(stations).filter((station) => station.flag === utils.NORMALSTATION).value()
-      const cStations = _(stations).filter((station) => station.flag === utils.CHANGESTATION).value()
+      const {
+        nStations,
+        cStations
+      } = utils.GetStationCollection(lineId)
+
       // map数据
       let series = []
       series = _(lines).map((line, index) => {
@@ -132,16 +131,22 @@ export default {
   mounted () {
     this.myChart = echarts.init(document.getElementById('main'))
     this.drawMap()
-    this.resizeDB = _.debounce(this.myChart.resize, 100)
+    this.resizeDB = _.debounce(this.myChart.resize, 50)
 
     ipcRenderer.on('resize', () => {
       if (this.myChart !== undefined) {
         this.resizeDB()
       }
     })
+    window.onresize = () => {
+      this.resizeDB()
+    }
     this.myChart.on('click', params => {
-      console.log(params)
+      if (params.name && params.name !== '') {
+        this.$store.commit('search/updateStationName', params.name)
+      }
     })
+    // utils.preData()
   }
 }
 </script>
@@ -149,7 +154,11 @@ export default {
 <style lang="sass">
 .echarts-map
   position: fixed
-  width: 100%
+  width: calc(100% - 300px)
   top: 0px
   bottom: 0px
+
+@media (max-width: 691px)
+  .echarts-map
+    width: 100%
 </style>

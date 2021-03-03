@@ -65,3 +65,13 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+// fs.open('station.txt', 'w+', (err, fd) => {
+//   if (err) {
+//     console.log('failed to open file')
+//   }
+//   fs.writeFile(fd, JSON.stringify(obj), (err) => {
+//     if (err) { console.log(err) }
+//     console.log('success')
+//   })
+// })
