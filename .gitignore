@@ -35,3 +35,4 @@ yarn-error.log*
 .vscode
 
 cmake-build-debug
+c_subway_algorithm.dll

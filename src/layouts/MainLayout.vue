@@ -3,14 +3,14 @@
     <q-layout view="hHh lpR fFr" class="WAL__layout shadow-3" container>
       <q-header elevated>
         <q-bar class="q-electron-drag text-black bg-grey-3 q-py-md">
-          <q-icon name="subway" />
+          <q-icon name="subway"/>
           <div>武汉地铁</div>
 
           <q-space/>
 
-          <q-btn dense flat icon="minimize" @click="minimize" />
-          <q-btn dense flat icon="crop_square" @click="maximize" />
-          <q-btn dense flat icon="close" @click="close" />
+          <q-btn dense flat icon="minimize" @click="minimize"/>
+          <q-btn dense flat icon="crop_square" @click="maximize"/>
+          <q-btn dense flat icon="close" @click="close"/>
         </q-bar>
       </q-header>
 
@@ -26,7 +26,7 @@
             color="white"
             text-color="primary"
             :options="[
-              {label: '票', value: 1},
+              {label: '价', value: 1},
               {label: '时', value: 2},
               {label: '拥', value: 3}
             ]"
@@ -59,7 +59,7 @@
               >
                 <q-time v-model="proxyTime" format24h>
                   <div class="row items-center justify-end q-gutter-sm">
-                    <q-btn label="Cancel" color="primary" flat v-close-popup />
+                    <q-btn label="Cancel" color="primary" flat v-close-popup/>
                     <q-btn
                       label="OK"
                       color="primary"
@@ -106,7 +106,7 @@
             </template>
           </q-select>
 
-          <q-separator />
+          <q-separator/>
 
           <q-select
             dense
@@ -169,17 +169,22 @@
                   <q-timeline-entry
                     v-for="currentStation in stations[lineIndex]"
                     class="cursor-pointer"
-                    :key="currentStation.iStationIndex"
-                    :title="currentStation.name"
-                    @click="
-                      findStation(currentLineId, currentStation.iStationIndex)
-                    "
+                    :key="currentStation.inStationIndex"
                   >
                     <template v-slot:title>
-                      <div class="cursor-pointer">
+                      <div class="cursor-pointer" @click="
+                      focusStation(currentLineId, currentStation.inStationIndex)
+                    ">
                         {{ currentStation.name }}
                       </div>
                     </template>
+                    <div v-if="currentStation.isChange" class="cursor-pointer row q-gutter-xs">
+                      <q-badge :color="'line' + lineId" v-for="lineId in stationLines(currentStation.name)"
+                               :key="lineId" class="q-pa-xs" transparent
+                               @click="changeLine(currentLineId, currentStation.inStationIndex, lineId)">
+                        {{ lineId + '号线' }}
+                      </q-badge>
+                    </div>
                   </q-timeline-entry>
                 </q-timeline>
               </q-card>
@@ -189,7 +194,7 @@
       </q-drawer>
 
       <q-page-container class="bg-grey-2 map">
-        <router-view />
+        <router-view/>
       </q-page-container>
     </q-layout>
   </div>
@@ -259,7 +264,8 @@ export default {
           color: '#98acab'
         }
       ],
-      stations: []
+      stations: [],
+      stationLines: this.getSationLines
     }
   },
   computed: {
@@ -306,13 +312,27 @@ export default {
         this.$q.electron.remote.BrowserWindow.getFocusedWindow().close()
       }
     },
-    findStation (lineId, stationIndex) {
-      const focusStation = this.stations[lineId - 1][stationIndex]
+    focusStation (lineId, stationIndex) {
+      const focusedStation = this.stations[lineId - 1][stationIndex]
       const centerStation = _(this.allStations).find({
-        name: focusStation.name
+        name: focusedStation.name
       })
-      this.$store.commit('map/updateFocusCenter', centerStation.value) // TODO fix mutation bug
-      this.$store.commit('search/updateStationName', focusStation.name)
+      this.$store.commit('map/updateFocusCenter', centerStation.value)
+      this.$store.commit('search/updateStationName', focusedStation.name)
+    },
+    changeLine (fromLineId, stationIndex, toLineId) {
+      const focusedStation = this.stations[fromLineId - 1][stationIndex]
+      const centerStation = _(this.stations[toLineId - 1]).find({
+        name: focusedStation.name
+      })
+      if (toLineId !== fromLineId) {
+        if (fromLineId) {
+          this.$refs.item[fromLineId - 1].hide()
+        }
+        this.$refs.item[toLineId - 1].show()
+      }
+      this.$store.commit('map/updateFocusCenter', centerStation.value)
+      this.$store.commit('search/updateStationName', focusedStation.name)
     },
     hideItem (evt) {
       if (evt) {
@@ -341,7 +361,9 @@ export default {
         this.$refs.item[resultStation.lineId - 1].show()
       } else {
         // 换乘站
-        this.$refs.item.forEach(item => item.hide())
+        if (this.currentLineId) {
+          this.$refs.item[this.currentLineId - 1].hide()
+        }
         this.$store.commit('map/updateFocusLine', 0)
       }
       this.$store.commit('map/updateFocusCenter', resultStation.value)
@@ -357,6 +379,11 @@ export default {
     },
     saveProxy () {
       this.time = this.proxyTime
+    },
+    getSationLines (name) {
+      const allStations = GetAllStations()
+      const resultStation = _(allStations).find({ name: name })
+      return resultStation.lineId
     }
   },
   created () {
@@ -396,24 +423,47 @@ export default {
   width: 100%
   margin: 0 auto
 
-.text-line1
-  color: #3d84c6
+.text-line
+  &1
+    color: #3d84c6
 
-.text-line2
-  color: #eb7caf
+  &2
+    color: #eb7caf
 
-.text-line3
-  color: #d9b966
+  &3
+    color: #d9b966
 
-.text-line4
-  color: #8ec720
+  &4
+    color: #8ec720
 
-.text-line5
-  color: #008536
+  &5
+    color: #008536
 
-.text-line6
-  color: #eb7900
+  &6
+    color: #eb7900
 
-.text-line7
-  color: #98acab
+  &7
+    color: #98acab
+
+.bg-line
+  &1
+    background: #3d84c6
+
+  &2
+    background: #eb7caf
+
+  &3
+    background: #d9b966
+
+  &4
+    background: #8ec720
+
+  &5
+    background: #008536
+
+  &6
+    background: #eb7900
+
+  &7
+    background: #98acab
 </style>

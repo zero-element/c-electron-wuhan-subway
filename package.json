@@ -7,15 +7,20 @@
   "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
-    "test": "echo \"No test specified\" && exit 0"
+    "test": "echo \"No test specified\" && exit 0",
+    "rebuild": "electron-rebuild -f -w ref"
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
     "axios": "^0.18.1",
     "core-js": "^3.6.5",
     "echarts": "^5.0.2",
+    "ffi-napi": "file:ffi-napi",
     "lodash": "^4.17.21",
     "quasar": "^1.0.0",
+    "ref-array-napi": "^1.2.1",
+    "ref-napi": "^3.0.1",
+    "ref-struct-napi": "^1.1.1",
     "vue-echarts": "^5.0.0-beta.0"
   },
   "devDependencies": {
@@ -25,6 +30,7 @@
     "electron": "^9.0.0",
     "electron-debug": "^3.0.1",
     "electron-devtools-installer": "^3.0.0",
+    "electron-rebuild": "^2.3.5",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.0",
     "eslint-loader": "^3.0.3",
@@ -32,7 +38,10 @@
     "eslint-plugin-node": "^11.0.0",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
-    "eslint-plugin-vue": "^6.1.2"
+    "eslint-plugin-vue": "^6.1.2",
+    "ffi": "github:lxe/node-ffi#node-12",
+    "ref": "github:lxe/ref#node-12",
+    "ref-struct": "github:lxe/ref-struct#node-12"
   },
   "browserslist": [
     "last 10 Chrome versions",

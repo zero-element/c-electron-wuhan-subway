@@ -6,7 +6,6 @@
 // Configuration for your app
 // https://quasar.dev/quasar-cli/quasar-conf-js
 /* eslint-env node */
-
 module.exports = function (/* ctx */) {
   return {
     // https://quasar.dev/quasar-cli/supporting-ts
@@ -70,9 +69,6 @@ module.exports = function (/* ctx */) {
           loader: 'eslint-loader',
           exclude: /node_modules/
         })
-        cfg.externals = {
-          BaiduMap: 'BMap'
-        }
       }
     },
 
@@ -192,9 +188,12 @@ module.exports = function (/* ctx */) {
       // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
       nodeIntegration: true,
 
-      extendWebpack (/* cfg */) {
-        // do something with Electron main process Webpack cfg
-        // chainWebpack also available besides this extendWebpack
+      extendWebpack (cfg) {
+        cfg.externals = {
+          bindings: 'bindings',
+          'ffi-napi': 'ffi-napi',
+          'ref-napi': 'ref-napi'
+        }
       }
     }
   }

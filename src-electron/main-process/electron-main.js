@@ -1,5 +1,10 @@
 import { app, BrowserWindow, nativeTheme, screen } from 'electron'
 
+const ffi = require('ffi-napi')
+const ref = require('ref-napi')
+const refArray = require('ref-array-napi')
+const Struct = require('ref-struct-napi')
+
 try {
   if (process.platform === 'win32' && nativeTheme.shouldUseDarkColors === true) {
     require('fs').unlinkSync(require('path').join(app.getPath('userData'), 'DevTools Extensions'))
@@ -66,12 +71,6 @@ app.on('activate', () => {
   }
 })
 
-// fs.open('station.txt', 'w+', (err, fd) => {
-//   if (err) {
-//     console.log('failed to open file')
-//   }
-//   fs.writeFile(fd, JSON.stringify(obj), (err) => {
-//     if (err) { console.log(err) }
-//     console.log('success')
-//   })
-// })
+const dll = ffi.Library('c_subway_algorithm.dll', {
+  init: ['void', []]
+}) // TODO 补充接口

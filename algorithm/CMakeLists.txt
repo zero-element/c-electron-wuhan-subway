@@ -3,5 +3,4 @@ project(algorithm C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(algorithm
-        algorithm.c)
+add_library(algorithm SHARED library.c library.h)

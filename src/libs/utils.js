@@ -123,7 +123,9 @@ function getAllStations () {
         name: stop.name,
         value: stop.position,
         lineId: [stop.line_id],
-        flag: stop.flag
+        flag: stop.flag,
+        uid: stop.uid,
+        sid: stop.sid
       }
     })
   )
@@ -171,12 +173,14 @@ export function GetStationCollection (lineId) {
 
 export function GetLineStations (lineId) {
   const stations = _(stationData).filter((value, index) => lineId ? index === lineId - 1 : true)
-    .flatMap((line, lineIndex) =>
+    .flatMap(line =>
       line.stops.map((stop, stopIndex) => {
         return {
           name: stop.name,
-          lineId: lineIndex + 1,
-          iStationIndex: stopIndex
+          lineId: stop.line_id,
+          value: stop.position,
+          inStationIndex: stopIndex,
+          isChange: stop.flag - 1
         }
       })
     )
@@ -199,14 +203,18 @@ import * as fs from 'fs'
 
 export function preData () {
   fs.open('output.txt', 'w+', (err, fd) => {
-    if (err) { console.log(err) }
+    if (err) {
+      console.log(err)
+    }
     const stopSet = {}
     stationData.map(line => {
       line.stops.reduce((last, now) => {
         if (now.uid in stopSet) {
           for (let i = 0; i < stopSet[now.uid].length; i++) {
             fs.writeFile(fd, now.uid + ' ' + now.sid + ' ' + now.uid + ' ' + stopSet[now.uid][i] + ' ' + 3.5 + ' ' + 0 + ' ' + 0 + '\n', (err) => {
-              if (err) { console.log(err) }
+              if (err) {
+                console.log(err)
+              }
             })
           }
           stopSet[now.uid].push(now.sid)
@@ -214,7 +222,9 @@ export function preData () {
           stopSet[now.uid] = [now.sid]
         }
         fs.writeFile(fd, last.uid + ' ' + last.sid + ' ' + now.uid + ' ' + now.sid + ' ' + 3 + ' ' + GetDistance(last, now) + ' ' + line.line_id + '\n', (err) => {
-          if (err) { console.log(err) }
+          if (err) {
+            console.log(err)
+          }
         })
         return now
       })
