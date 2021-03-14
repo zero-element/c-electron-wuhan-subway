@@ -4,7 +4,7 @@
  *  modify this file, but it can be used to extend your development
  *  environment.
  */
-
+//
 import electronDebug from 'electron-debug'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { app, BrowserWindow } from 'electron'

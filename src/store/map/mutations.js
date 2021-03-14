@@ -1,11 +1,13 @@
 // import * as utils from 'src/libs/utils'
 
 export function updateFocusCenter (state, position) {
+  state.showResult = false
   state.center = position
   state.scale = 14
 }
 
 export function updateFocusLine (state, lineId) {
+  state.showResult = false
   const centerPosList = [
     [114.25, 30.63],
     [114.32, 30.63],
@@ -23,4 +25,9 @@ export function updateFocusLine (state, lineId) {
   }
   state.scale = 12
   state.center = [114.25, 30.575]
+}
+
+export function updateResult (state, result) {
+  state.result = Object.assign([], result)
+  state.showResult = true
 }

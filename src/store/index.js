@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 
 import map from './map'
 import search from './search'
+import user from './user'
 
 Vue.use(Vuex)
 
@@ -19,7 +20,8 @@ export default function (/* { ssrContext } */) {
   const Store = new Vuex.Store({
     modules: {
       map,
-      search
+      search,
+      user
     },
 
     // enable strict mode (adds overhead!)

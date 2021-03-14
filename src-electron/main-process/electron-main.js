@@ -1,9 +1,4 @@
-import { app, BrowserWindow, nativeTheme, screen } from 'electron'
-
-const ffi = require('ffi-napi')
-const ref = require('ref-napi')
-const refArray = require('ref-array-napi')
-const Struct = require('ref-struct-napi')
+import { app, BrowserWindow, nativeTheme, screen, ipcMain } from 'electron'
 
 try {
   if (process.platform === 'win32' && nativeTheme.shouldUseDarkColors === true) {
@@ -70,7 +65,3 @@ app.on('activate', () => {
     createWindow()
   }
 })
-
-const dll = ffi.Library('c_subway_algorithm.dll', {
-  init: ['void', []]
-}) // TODO 补充接口

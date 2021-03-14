@@ -1,3 +1,6 @@
+export const LOGINKEY = 'subway-login'
+export const STORAGEKEY = 'subway-storage'
+
 export const mapstyle = {
   styleJson: [{
     featureType: 'water',
@@ -161,6 +164,13 @@ function getAllStations () {
 
 export const GetAllStations = _.once(getAllStations)
 
+function getRawStations () {
+  return _(stationData).flatMap((line) =>
+    line.stops)
+}
+
+export const GetRawStations = _.once(getRawStations)
+
 export function GetStationCollection (lineId) {
   const stations = _(GetAllStations()).filter((station) => lineId ? _(station.lineId).includes(lineId) : true)
   const nStations = _(stations).filter((station) => station.flag === NORMALSTATION).value()
@@ -199,68 +209,43 @@ export function GetDistance (dota, dotb) {
   return s
 }
 
-import * as fs from 'fs'
-
-export function preData () {
-  fs.open('output.txt', 'w+', (err, fd) => {
-    if (err) {
-      console.log(err)
-    }
-    const stopSet = {}
-    stationData.map(line => {
-      line.stops.reduce((last, now) => {
-        if (now.uid in stopSet) {
-          for (let i = 0; i < stopSet[now.uid].length; i++) {
-            fs.writeFile(fd, now.uid + ' ' + now.sid + ' ' + now.uid + ' ' + stopSet[now.uid][i] + ' ' + 3.5 + ' ' + 0 + ' ' + 0 + '\n', (err) => {
-              if (err) {
-                console.log(err)
-              }
-            })
-          }
-          stopSet[now.uid].push(now.sid)
-        } else {
-          stopSet[now.uid] = [now.sid]
-        }
-        fs.writeFile(fd, last.uid + ' ' + last.sid + ' ' + now.uid + ' ' + now.sid + ' ' + 3 + ' ' + GetDistance(last, now) + ' ' + line.line_id + '\n', (err) => {
-          if (err) {
-            console.log(err)
-          }
-        })
-        return now
-      })
-      return line
-    })
-  })
+export function GetSTime (time) {
+  time += 360
+  let h = Math.floor(time / 60).toString()
+  let m = (time % 60).toString()
+  if (h.length === 1) h = '0' + h
+  if (m.length === 1) m = '0' + m
+  return h + ':' + m
 }
 
-// export function preData () {
-//   fs.open('output.txt', 'w+', (err, fd) => {
-//     if (err) {
-//       console.log('failed to open file')
-//     }
-//     let scount = 0
-//     let ucount = 0
-//     const nameSet = {}
-//     const result = stationData.filter((value, index) => index & 1).map((line, index) => {
-//       delete line.line_uid
-//       delete line.pair_line_uid
-//       line.line_id = index + 1
-//       line.stops.map((stop) => {
-//         delete stop.is_practical
-//         stop.sid = scount++
-//         if (stop.name in nameSet) {
-//           stop.uid = nameSet[stop.name]
-//         } else {
-//           stop.uid = ucount++
-//           nameSet[stop.name] = stop.uid
-//         }
-//         return stop
-//       })
-//       return line
-//     })
-//     fs.writeFile(fd, JSON.stringify(result), (err) => {
-//       if (err) { console.log(err) }
-//       console.log('success')
-//     })
-//   })
-// }
+export function GetPrice (distance) {
+  let price = 0
+  if (distance > 50) {
+    price += (distance - 50) / 20
+    distance = 50
+  }
+  if (distance > 40) {
+    price += (distance - 40) / 10
+    distance = 40
+  }
+  if (distance > 24) {
+    price += (distance - 24) / 8
+    distance = 24
+  }
+  if (distance > 12) {
+    price += (distance - 12) / 6
+    distance = 12
+  }
+  if (distance > 4) {
+    price += (distance - 4) / 4
+    distance = 4
+  }
+  price += 2
+  return price
+}
+
+export const fromHexString = hexString =>
+  new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)))
+
+export const toHexString = bytes =>
+  bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '')
